@@ -4,8 +4,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import javax.swing.JOptionPane;
-
 public class Admin {
 
     private static final String ADMIN_CREDENTIALS = "data/ADMIN/admin.txt";
@@ -602,24 +600,13 @@ public class Admin {
                 subject = Admin.getSubject(path);
             }
 
-            File profFile = new File(
-                FACULTY_SCHED_PROF + "/" + profID + "/" + profID + "_Schedule.txt"
-            );
-
-            try {
-                // 🔥 CREATE DIRECTORY FIRST
-                File parentDir = profFile.getParentFile();
-                if (!parentDir.exists()) {
-                    parentDir.mkdirs();
-                }
-
-                // CREATE FILE
-                if (!profFile.exists()) {
+            File profFile = new File(FACULTY_SCHED_PROF + "/" + profID + "/" + profID + "_Schedule.txt");
+            if (!profFile.exists()) {
+                try {
                     profFile.createNewFile();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
                 }
-
-            } catch (IOException ex) {
-                ex.printStackTrace();
             }
 
             profFile.getParentFile().mkdirs();

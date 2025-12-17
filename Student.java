@@ -427,7 +427,7 @@ public class Student {
                 + yearLevel.replace(" ", "") + "/"
                 + college.toUpperCase() + "/"
                 + program.toUpperCase() + "/"
-                + section + "/" + program.toUpperCase() + section + "_Schedule.txt";
+                + section + "/" + program.toUpperCase() + section + "_schedule.txt";
 
         List<String> enc = Utils.readFile(path);
 

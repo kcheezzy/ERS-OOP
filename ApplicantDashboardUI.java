@@ -420,17 +420,19 @@ public class ApplicantDashboardUI extends JFrame {
         return p;
     }
 
-   private String generateStudentId() {
+private String generateStudentId() {
     int maxId = 0;
     
     // Get year from schoolYear (e.g., "2025-2026" -> "25")
     String yearPrefix = "";
     if (schoolYear != null && schoolYear.length() >= 4) {
-        yearPrefix = schoolYear.substring(2, 4); // "2025-2026" -> "25"
+        yearPrefix = schoolYear.substring(2, 4);
     }
     
     // Build prefix: NW-25
     String prefix = "NW-" + yearPrefix;
+    
+    System.out.println("🔍 Scanning for existing IDs with prefix: " + prefix);
     
     // 1. Check APPLICANT file
     String filePath = getApplicantFilePath();
@@ -447,46 +449,61 @@ public class ApplicantDashboardUI extends JFrame {
                 String id = p[0].trim();
                 if (id.startsWith(prefix)) {
                     try {
-                        // Extract number from "NW-25-0001" -> "0001" -> 1
-                        String numPart = id.substring(prefix.length() + 1); // skip the "-"
+                        String numPart = id.substring(prefix.length() + 1);
                         int n = Integer.parseInt(numPart);
-                        if (n > maxId) maxId = n;
+                        if (n > maxId) {
+                            maxId = n;
+                            System.out.println("  Found in applicants: " + id + " -> max = " + maxId);
+                        }
                     } catch (Exception ignored) {}
                 }
             }
         }
     }
     
-    // 2. Check STUDENT folders (all school years)
+    // 2. Check ALL STUDENT folders recursively
     File studentsDir = new File("data/STUDENTS");
     if (studentsDir.exists()) {
-        File[] schoolYears = studentsDir.listFiles();
-        if (schoolYears != null) {
-            for (File sy : schoolYears) {
-                if (!sy.isDirectory()) continue;
-                
-                File[] studentFolders = sy.listFiles();
-                if (studentFolders != null) {
-                    for (File sf : studentFolders) {
-                        if (!sf.isDirectory()) continue;
-                        
-                        String folderName = sf.getName();
-                        if (folderName.startsWith(prefix)) {
-                            try {
-                                String numPart = folderName.substring(prefix.length() + 1);
-                                int n = Integer.parseInt(numPart);
-                                if (n > maxId) maxId = n;
-                            } catch (Exception ignored) {}
-                        }
-                    }
-                }
-            }
-        }
+        scanStudentFolders(studentsDir, prefix, maxId);
     }
     
     int next = maxId + 1;
-    return String.format("%s-%04d", prefix, next);
+    String newID = String.format("%s-%04d", prefix, next);
+    System.out.println("✅ Generated new ID: " + newID);
+    return newID;
 }
+
+// Helper method for recursive scanning
+private int scanStudentFolders(File dir, String prefix, int currentMax) {
+    int maxFound = currentMax;
+    
+    File[] files = dir.listFiles();
+    if (files == null) return maxFound;
+    
+    for (File f : files) {
+        if (f.isDirectory()) {
+            String name = f.getName();
+            
+            // Check if folder name matches our prefix
+            if (name.startsWith(prefix)) {
+                try {
+                    String numPart = name.substring(prefix.length() + 1);
+                    int n = Integer.parseInt(numPart);
+                    if (n > maxFound) {
+                        maxFound = n;
+                        System.out.println("  Found in folders: " + name + " -> max = " + maxFound);
+                    }
+                } catch (Exception ignored) {}
+            }
+            
+            // Recursively scan subfolders
+            maxFound = scanStudentFolders(f, prefix, maxFound);
+        }
+    }
+    
+    return maxFound;
+}
+
 
     private JPanel statusPassedPanel() {
 
@@ -558,12 +575,27 @@ public class ApplicantDashboardUI extends JFrame {
         buttonPanel.add(declineBtn);
 
         proceedBtn.addActionListener(e -> {
-
             // CLEAR the question + buttons
             statusPanel.remove(question);
             statusPanel.remove(buttonPanel);
 
-            // ==== NEW GREEN BOX (Enrollment Proceed Template) ====
+            // ===== Generate New Student ID =====
+            String newStudentId = generateStudentId();
+
+            // ✅ CRITICAL: SAVE STUDENT DATA IMMEDIATELY!
+            boolean saved = saveStudentRecord(newStudentId);
+
+            if (!saved) {
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Error saving student record. Please contact admin.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+                );
+                return;
+            }
+
+            // ==== NEW GREEN BOX ====
             JPanel greenBox = new JPanel();
             greenBox.setLayout(new BoxLayout(greenBox, BoxLayout.Y_AXIS));
             greenBox.setBackground(new Color(120, 220, 170));
@@ -574,10 +606,6 @@ public class ApplicantDashboardUI extends JFrame {
             thanks.setFont(new Font("SansSerif", Font.PLAIN, 20));
             thanks.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            // ===== Generate New Student ID (ID-0001) =====
-            String newStudentId = generateStudentId();
-
-            // Example label
             JLabel sid = new JLabel("Student ID :   " + newStudentId);
             sid.setFont(new Font("SansSerif", Font.BOLD, 20));
             sid.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -592,11 +620,9 @@ public class ApplicantDashboardUI extends JFrame {
             greenBox.add(Box.createVerticalStrut(5));
             greenBox.add(pwd);
 
-            // ATTACH GREEN BOX AFTER MESSAGE
             statusPanel.add(Box.createVerticalStrut(20));
             statusPanel.add(greenBox);
 
-            // REFRESH PANEL
             statusPanel.revalidate();
             statusPanel.repaint();
         });
@@ -695,6 +721,82 @@ public class ApplicantDashboardUI extends JFrame {
 
         return statusPanel;
     }
+
+    private boolean saveStudentRecord(String studentID) {
+    try {
+        // Create student folder structure
+        String folderPath = "data/STUDENTS/" + 
+                          schoolYear + "/" +
+                          yearLevel + "/" +
+                          college + "/" +
+                          program + "/" +
+                          "A" + "/" +  // Default section A
+                          studentID;
+        
+        File studentFolder = new File(folderPath);
+        studentFolder.mkdirs();
+
+        
+        String[] nameParts = fullName.trim().split("\\s+");
+        String lastName = nameParts.length > 0 ? nameParts[nameParts.length - 1] : "";
+        String firstName = nameParts.length > 1 ? nameParts[0] : "";
+        String middleInitial = nameParts.length > 2 ? nameParts[1].substring(0, 1) : "";
+
+        String studentInfo = String.join("|",
+            studentID,              // 0
+            lastName,               // 1
+            firstName,              // 2
+            middleInitial,          // 3
+            address,                // 4
+            birthdate,              // 5
+            String.valueOf(age),    // 6
+            email,                  // 7
+            phone,                  // 8
+            fathersName,            // 9
+            mothersName,            // 10
+            school,                 // 11
+            defaultPass,            // 12 - password
+            schoolYear,             // 13
+            yearLevel,              // 14
+            college,                // 15
+            program,                // 16
+            "ENROLLED",             // 17 - status
+            "A",                    // 18 - section (default A)
+            "",                     // 19 - reserved
+            "A"                     // 20 - section again (for compatibility)
+        );
+
+        // Encrypt the info
+        String encrypted = Utils.encryptEachField(studentInfo);
+
+        // Save to _info.txt
+        File infoFile = new File(studentFolder, studentID + "_info.txt");
+        Utils.writeRawFile(infoFile.getPath(), java.util.Collections.singletonList(encrypted));
+
+        // Create empty grades file
+        File gradesFile = new File(studentFolder, studentID + "_grades.txt");
+        Utils.writeRawFile(gradesFile.getPath(), new java.util.ArrayList<>());
+
+        // Create empty inbox file
+        File inboxFile = new File(studentFolder, studentID + "_inbox.txt");
+        Utils.writeRawFile(inboxFile.getPath(), new java.util.ArrayList<>());
+
+        // Create empty notes file
+        File notesFile = new File(studentFolder, studentID + "_notes.txt");
+        Utils.writeRawFile(notesFile.getPath(), new java.util.ArrayList<>());
+
+        // Create empty assignments file
+        File assignmentsFile = new File(studentFolder, studentID + "_assignments.txt");
+        Utils.writeRawFile(assignmentsFile.getPath(), new java.util.ArrayList<>());
+
+        System.out.println("✅ Student saved: " + studentID + " at " + folderPath);
+        return true;
+
+    } catch (Exception ex) {
+        ex.printStackTrace();
+        return false;
+    }
+}
 
    private JPanel getStatusPanel() {
     if (status == null || status.isBlank() || status.equalsIgnoreCase("Pending")) {

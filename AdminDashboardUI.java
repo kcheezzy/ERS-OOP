@@ -55,7 +55,7 @@ public class AdminDashboardUI extends JFrame{
 
         // Logout Button
         JLabel logout = new JLabel("LOG OUT");
-        logout.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        logout.setFont(new Font("Segoe UI", Font.BOLD, 20));
         logout.setForeground(Color.BLACK);
         logout.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
@@ -76,11 +76,12 @@ public class AdminDashboardUI extends JFrame{
                 new MainUI().setVisible(true);
             }
         });
-        logout.setBounds(1650, 50, 120, 40);
+        logout.setBounds(1200, 30, 120, 40);
         bg.add(logout);
+        int x = 20, y = 120, w = 1320, h = 580;
         // ===== CENTER WHITE CARD =====
         RoundedPanel card = new RoundedPanel(25);
-        card.setBounds(40, 180, 1850, 760);
+        card.setBounds(x, y , w, h);
         card.setBackground(Color.WHITE);
         card.setLayout(null);
         bg.add(card);
@@ -88,7 +89,7 @@ public class AdminDashboardUI extends JFrame{
         // ===== TABS PANEL =====
         JPanel tabPanel = new JPanel(null);
         tabPanel.setOpaque(false);
-        tabPanel.setBounds(30, 20, 1900, 60);
+        tabPanel.setBounds(60, 20,1400, 70);
         card.add(tabPanel);
 
         Font tabFont = new Font("Segoe UI", Font.BOLD, 20);
@@ -113,10 +114,10 @@ public class AdminDashboardUI extends JFrame{
         tab3.setCursor(new Cursor(Cursor.HAND_CURSOR));
         tab4.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        tab1.setBounds(20, 10, 350, 40);
-        tab2.setBounds(320, 10, 250, 40);
-        tab3.setBounds(600, 10, 360, 40);
-        tab4.setBounds(950, 10, 200, 40);
+        tab1.setBounds(0, 0, 330, 40);
+        tab2.setBounds(300, 0, 330, 40);
+        tab3.setBounds(600, 0, 330, 40);
+        tab4.setBounds(980, 0, 330, 40);
 
         tabPanel.add(tab1);
         tabPanel.add(tab2);
@@ -136,7 +137,7 @@ public class AdminDashboardUI extends JFrame{
         // CardPanel setup
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
-        cardPanel.setBounds(20, 90, 1810, 640);
+        cardPanel.setBounds(10, 60, 1300, 500);
         cardPanel.setOpaque(false);
 
         cardPanel.add(AppManagement(), "Applicants");
@@ -480,15 +481,6 @@ private JPanel ReApp() {
         table.setShowGrid(true);           
         table.setGridColor(Color.BLACK);   
 
-    // ===== CENTER ALL CELLS =====
-    DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-    centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
-    
-    // Apply to all columns
-    for (int i = 0; i < columnNames.length; i++) {
-        table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
-    }
-
     // ===== Scroll Pane =====
     JScrollPane scroll = new JScrollPane(table);
     scroll.setBounds(12, 12, tableContainer.getWidth() - 24, tableContainer.getHeight() - 24); 
@@ -686,9 +678,6 @@ private JPanel SchedManagement() {
         int row1Y = 80;
         int rowGap = 90;
 
-        int row2Y = row1Y + rowGap;
-        int row3Y = row2Y + rowGap;
-
         int fieldYOffset = -5;   // para centered ang button vs label text
 
        // LEFT COLUMN
@@ -810,7 +799,7 @@ private JPanel SchedManagement() {
         // ===================== SECTION =====================
         JButton secBtn = new JButton("Choose section");
         secBtn.setFont(new Font("Segoe UI", Font.ITALIC, 20));
-        secBtn.setBounds(leftFieldX, row3Y + fieldYOffset, 220, 40);
+        secBtn.setBounds(leftFieldX, row1Y + rowGap + fieldYOffset, 220, 40);
         secBtn.putClientProperty("JButton.buttonType", "roundRect");  
         secBtn.putClientProperty("JButton.style", "toolBar");
         secBtn.setBackground(Color.WHITE);
@@ -1069,11 +1058,11 @@ private JPanel SchedManagement() {
     });
 
    yrCombo.addActionListener(e -> {
-    String value = (String) yrCombo.getSelectedItem();
-    Admin.setSchoolYear(value);
-    if (Admin.getAcademicYear() != null)
+        String value = (String) yrCombo.getSelectedItem();
+        Admin.setPromotiontype(value); // yearLevel
         loadStudentsIntoTable(model);
     });
+
 
     progCombo.addActionListener(e -> {
         String value = (String) progCombo.getSelectedItem();
@@ -1161,8 +1150,26 @@ private JPanel SchedManagement() {
         String nextSY = (Integer.parseInt(parts[0]) + 1) + "-" + (Integer.parseInt(parts[1]) + 1);
 
         for (int r : rows) {
-            String studentID = table.getValueAt(r, 0).toString();
-            File studentFolder = new File("data/STUDENTS/" + Admin.getAcademicYear() + "/" + studentID);
+             int modelRow = table.convertRowIndexToModel(r);
+            String studentID = model.getValueAt(modelRow, 0).toString();
+            
+            File baseDir = new File("data/STUDENTS/" + Admin.getAcademicYear());
+            List<File> matches = new ArrayList<>();
+            Admin.findStudentFolders(baseDir, matches);
+
+            File studentFolder = null;
+            for (File f : matches) {
+                if (f.getName().equals(studentID)) {
+                    studentFolder = f;
+                    break;
+                }
+            }
+
+            if (studentFolder == null) {
+                System.out.println("Student folder not found for: " + studentID);
+                continue;
+            }
+
 
             if (choice == 0) {
                 Admin.regularPromote(studentFolder, Admin.getAcademicYear(), nextSY);
