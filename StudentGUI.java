@@ -1617,7 +1617,7 @@ public static class AcademicPanel extends JPanel {
     // CHECK 1: Kung Raw na siya at kumpleto ang parts (5 parts), ibalik na agad ang raw text.
     // HINDI na ito dadaan sa decryption.
     String[] plainCheck = raw.split("\\|", -1);
-    if (plainCheck.length >= 5) {
+    if (plainCheck.length >= 5) {                                                                                                                                      
         return raw; 
     }
 

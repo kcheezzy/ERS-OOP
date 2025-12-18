@@ -238,7 +238,7 @@ public class Faculty {
         List<String> available = new ArrayList<>();
 
         for (String line : sched) {
-            String[] parts = line.split("\\|");
+            String[] parts = line.split("\\s*\\|\\s*");
             String year = parts[0].trim();
             String course = parts[1].trim();
             String sec = parts[2].trim();

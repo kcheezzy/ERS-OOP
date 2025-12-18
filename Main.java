@@ -20,6 +20,7 @@ public class Main {
                 case "2":
                     Student.login();
                     break;
+    
                 case "3":
                     Faculty.login();
                     break;

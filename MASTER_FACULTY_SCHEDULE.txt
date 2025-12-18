@@ -1,0 +1,104 @@
+PROF-0002|1stYear|BSIT|A|Computer Programming 1|THURS|16-18|2025-2026|COS
+PROF-0007|1stYear|BSIT|A|Linear Integrated Circuits|THURS|9-12|2025-2026|COS
+PROF-0010|1stYear|BSIT|A|GEC5 Purposive Communication	|THURS|11-12|2025-2026|COS
+PROF-0029|1stYear|BSIT|A|GEC5 Purposive Communication	|FRI|7-10|2025-2026|COS
+PROF-0016|1stYear|BSIT|A|Theory of Structures|SAT|11-12|2025-2026|COS
+PROF-0020|1stYear|BSIT|A|Physical Activity Towards Health and Fitness|SAT|7-8|2025-2026|COS
+PROF-0019|1stYear|BSIT|A|Architectural Design|TUE|9-11|2025-2026|COS
+PROF-0001|1stYear|BSIT|A|Web Systems and Technologies|THURS|9-10|2025-2026|COS
+PROF-0012|1|BSIT|A|Methods of Teaching Technical Subjects|TUE|8-11|2025-2026|COS
+PROF-0009|1|BSIT|A|Engineering Drawing & Graphics|WED|16-19|2025-2026|COS
+PROF-0023|1|BSIT|A|Math for Technology|SAT|11-14|2025-2026|COS
+PROF-0003|1|BSIT|A|Human-Computer Interaction|MON|15-18|2025-2026|COS
+PROF-0014|1|BSIT|A|Production Planning and Control|WED|16-18|2025-2026|COS
+PROF-0017|1|BSIT|A|Principles of Urban and Regional Planning|MON|13-14|2025-2026|COS
+PROF-0007|1|BSIT|A|Engineering Economy|FRI|15-18|2025-2026|COS
+PROF-0028|1|BSIT|A|GEC5 Purposive Communication	|TUE|12-14|2025-2026|COS
+PROF-0029|1|BSIT|A|GEC6 Art Appreciation	|TUE|18-20|2025-2026|COS
+PROF-0028|1|BSIT|A|GEC7 Science, Technology, and Society|SAT|11-13|2025-2026|COS
+PROF-0013|1|BSIT|A|Shop Mathematics|TUE|10-12|2025-2026|COS
+PROF-0021|1|BSIT|A|Computer-Aided Design|WED|9-10|2025-2026|COS
+PROF-0010|1|BSIT|A|Physical Activity Towards Health and Fitness|FRI|17-19|2025-2026|COS
+PROF-0011|1|BSIT|A|Welding and Fabrication Techniques|WED|15-16|2025-2026|COS
+PROF-0027|1|BSIT|A|Mythology and Folklore|WED|10-12|2025-2026|COS
+PROF-0009|1|BSIT|A|Calculus-based Physics 2 (Electromagnetism)|SAT|7-9|2025-2026|COS
+PROF-0009|1stYear|BSIT|A|Electrical Circuits|THURS|8-9|2025-2026|COS
+PROF-0007|1stYear|BSIT|A|Heat Transfer|TUE|13-16|2025-2026|COS
+PROF-0001|1stYear|BSIT|A|Computer Architecture and Organization|FRI|8-11|2025-2026|COS
+PROF-0030|1stYear|BSIT|A|GEC3 The Contemporary World	|SAT|9-10|2025-2026|COS
+PROF-0023|1stYear|BSIT|A|Supervised Industrial Training|TUE|19-22|2025-2026|COS
+PROF-0027|1stYear|BSIT|A|Metaphysics|TUE|10-12|2025-2026|COS
+PROF-0017|1stYear|BSIT|A|Zoning Ordinances|WED|10-13|2025-2026|COS
+PROF-0003|1stYear|BSIT|A|Computer Programming 1|THURS|16-18|2025-2026|COS
+PROF-0026|1stYear|BSIT|A|Philippine Literature|TUE|19-22|2025-2026|COS
+PROF-0021|1stYear|BSIT|A|Applied Chemistry|FRI|11-13|2025-2026|COS
+PROF-0027|1stYear|BSIT|A|Mythology and Folklore|MON|12-13|2025-2026|COS
+PROF-0025|1stYear|BSIT|A|Physical Activity Towards Health and Fitness|SAT|15-18|2025-2026|COS
+PROF-0002|1stYear|BSIT|A|Operating Systems|THURS|11-14|2025-2026|COS
+PROF-0012|1stYear|BSIT|A|Basic Hand Tools and Bench Work	|WED|12-14|2025-2026|COS
+PROF-0011|1stYear|BSIT|A|Industrial Electronics and Control Systems|TUE|11-13|2025-2026|COS
+PROF-0007|1stYear|BSIT|A|Differential Equations|SAT|19-20|2025-2026|COS
+PROF-0018|1|BSIT|A|Theory of Structures|SAT|15-18|2025-2026|COS
+PROF-0009|1|BSIT|A|Chemical Reaction Engineering|FRI|10-12|2025-2026|COS
+PROF-0005|1|BSIT|A|Web Systems and Technologies|TUE|12-13|2025-2026|COS
+PROF-0019|1|BSIT|A|Environmental Management|WED|17-20|2025-2026|COS
+PROF-0022|1|BSIT|A|Supervised Industrial Training|WED|18-19|2025-2026|COS
+PROF-0024|1|BSIT|A|Math for Technology|FRI|18-20|2025-2026|COS
+PROF-0017|1|BSIT|A|Computer-Aided Design & Drafting|MON|13-15|2025-2026|COS
+PROF-0010|1|BSIT|A|GEC1 Understanding the Self	|WED|9-10|2025-2026|COS
+PROF-0028|1stYear|BSIT|A|GEC7 Science, Technology, and Society|SAT|15-16|2025-2026|COS
+PROF-0024|1stYear|BSIT|A|Electrical and Electronics Principles|MON|9-11|2025-2026|COS
+PROF-0027|1stYear|BSIT|A|World Literature|SAT|12-14|2025-2026|COS
+PROF-0012|1stYear|BSIT|A|Industrial Electronics and Control Systems|THURS|7-8|2025-2026|COS
+PROF-0010|1stYear|BSIT|A|GEC5 Purposive Communication	|MON|7-8|2025-2026|COS
+PROF-0019|1stYear|BSIT|A|Color Theory|FRI|17-20|2025-2026|COS
+PROF-0014|1stYear|BSIT|A|Production Planning and Control|SAT|7-10|2025-2026|COS
+PROF-0005|1stYear|BSIT|A|Social and Professional Issues in Computing|MON|16-18|2025-2026|COS
+PROF-0014|1|BSIT|A|Computer-Aided Manufacturing |FRI|9-10|2025-2026|COS
+PROF-0017|1|BSIT|A|Geographic Information Systems|FRI|15-16|2025-2026|COS
+PROF-0005|1|BSIT|A|Computer Architecture and Organization|MON|19-20|2025-2026|COS
+PROF-0001|1|BSIT|A|Discrete Mathematics / Discrete Structures|THURS|15-18|2025-2026|COS
+PROF-0030|1|BSIT|A|GEC2 Readings in Philippine History	|WED|18-21|2025-2026|COS
+PROF-0011|1|BSIT|A|Computer-Aided Manufacturing |TUE|14-17|2025-2026|COS
+PROF-0008|1|BSIT|A|Calculus-based Physics 1 (Mechanics)|SAT|8-10|2025-2026|COS
+PROF-0009|1|BSIT|A|Engineering Management|FRI|18-20|2025-2026|COS
+PROF-0016|1|BASALT|A|Site Planning & Landscape Architecture|THURS|19-20|2025-2026|COS
+PROF-0013|1|BASALT|A|Fundamentals of AC and DC Circuits|WED|19-22|2025-2026|COS
+PROF-0015|1|BASALT|A|GEC6 Art Appreciation	|TUE|11-13|2025-2026|COS
+PROF-0005|1|BASALT|A|Computer Programming 2|TUE|18-21|2025-2026|COS
+PROF-0012|1|BASALT|A|Fundamentals of AC and DC Circuits|MON|11-13|2025-2026|COS
+PROF-0001|1|BASALT|A|Computer Programming 2|WED|15-17|2025-2026|COS
+PROF-0028|1|BASALT|A|GEC4 Mathematics in the Modern World	|THURS|17-18|2025-2026|COS
+PROF-0002|1|BASALT|A|Introduction to Computing|MON|15-17|2025-2026|COS
+PROF-0013|1|BSE|A|Fundamentals of AC and DC Circuits|FRI|17-20|2025-2026|CLA
+PROF-0010|1|BSE|A|GEC6 Art Appreciation	|SAT|13-14|2025-2026|CLA
+PROF-0019|1|BSE|A|Building Utilities|THURS|8-10|2025-2026|CLA
+PROF-0024|1|BSE|A|Production Drawing|THURS|12-13|2025-2026|CLA
+PROF-0026|1|BSE|A|Mythology and Folklore|SAT|8-10|2025-2026|CLA
+PROF-0018|1|BSE|A|Professional Practice and Ethics|SAT|13-16|2025-2026|CLA
+PROF-0020|1|BSE|A|GEC5 Purposive Communication	|WED|12-14|2025-2026|CLA
+PROF-0008|1|BSE|A|Calculus-based Physics 2 (Electromagnetism)|SAT|14-16|2025-2026|CLA
+PROF-0022|1|BSIT|A|Industrial Operations & Management Practices|THURS|7-8|2025-2026|COS
+PROF-0020|1|BSIT|A|GEC4 Mathematics in the Modern World	|SAT|15-17|2025-2026|COS
+PROF-0003|1|BSIT|A|Introduction to Computing|THURS|17-18|2025-2026|COS
+PROF-0004|1|BSIT|A|Computer Programming 1|WED|9-11|2025-2026|COS
+PROF-0030|1|BSIT|A|GE Electives|THURS|15-17|2025-2026|COS
+PROF-0017|1|BSIT|A|History of Furniture|SAT|7-8|2025-2026|COS
+PROF-0008|1|BSIT|A|Differential Equations|THURS|14-17|2025-2026|COS
+PROF-0010|1|BSIT|A|Physical Activity Towards Health and Fitness|SAT|16-18|2025-2026|COS
+PROF-0029|1|BSIT|A|GEC2 Readings in Philippine History	|WED|17-18|2025-2026|COS
+PROF-0001|1|BSIT|A|Discrete Mathematics / Discrete Structures|WED|7-9|2025-2026|COS
+PROF-0014|1|BSIT|A|Fundamentals of AC and DC Circuits|MON|19-21|2025-2026|COS
+PROF-0016|1|BSIT|A|Lighting and Acoustics|FRI|12-13|2025-2026|COS
+PROF-0022|1|BSIT|A|Computer-Aided Design|SAT|9-10|2025-2026|COS
+PROF-0024|1|BSIT|A|Applied Physics|THURS|15-18|2025-2026|COS
+PROF-0012|1|BSIT|A|Fundamentals of AC and DC Circuits|TUE|10-11|2025-2026|COS
+PROF-0011|1|BSIT|A|Welding and Fabrication Techniques|WED|12-14|2025-2026|COS
+PROF-0017|1|BSIT|A|Furniture Design|MON|7-9|2025-2026|COS
+PROF-0003|1|BSIT|A|Social and Professional Issues in Computing|WED|8-10|2025-2026|COS
+PROF-0029|1|BSIT|A|GEC5 Purposive Communication	|SAT|9-12|2025-2026|COS
+PROF-0007|1|BSIT|A|Engineering Economy|FRI|14-15|2025-2026|COS
+PROF-0012|1|BSIT|A|Machine Shop Practice|THURS|19-21|2025-2026|COS
+PROF-0016|1|BSIT|A|Professional Practice and Ethics|TUE|17-19|2025-2026|COS
+PROF-0030|1|BSIT|A|GEC1 Understanding the Self	|WED|15-16|2025-2026|COS
+PROF-0024|1|BSIT|A|Applied Chemistry|SAT|16-17|2025-2026|COS

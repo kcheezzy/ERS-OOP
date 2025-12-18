@@ -1,15 +1,8 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
@@ -133,8 +126,8 @@ public class FacultyDashboardUI extends JFrame {
 
         // Add panels
         cardPanel.add(new CoursesPanel(), "COURSES");
-        cardPanel.add(new GradeManagementPanel(profId, fullName), "GRADES");
-        cardPanel.add(new AssignmentsPanel(fullName, subjects, profId), "ASSIGNMENTS");
+        cardPanel.add(new GradeManagementPanel(), "GRADES");
+        cardPanel.add(new AssignmentsPanel(fullName, subjects), "ASSIGNMENTS");
         cardPanel.add(new ResignationPanel(), "RESIGNATION");
 
         // Show courses initially
@@ -707,38 +700,32 @@ public class FacultyDashboardUI extends JFrame {
     }
 
  
-   public class GradeManagementPanel extends JPanel {
+    public class GradeManagementPanel extends JPanel {
 
-    private JComboBox<String> yearCombo, programCombo, sectionCombo, subjectCombo;
-    private JTextField studentIdField, gradeField;
+    private JComboBox<String> yearCombo;
+    private JComboBox<String> programCombo;
+    private JComboBox<String> sectionCombo;
+    private JTextField studentIdField;
+    private JTextField gradeField;
     private JTable table;
     private DefaultTableModel tableModel;
-    
-    private String profId;
-    private String fullName;
-    private List<StudentEntry> allStudents = new ArrayList<>();
-    private Map<String, String> scheduleSubjects = new HashMap<>();
+
+    private List<String[]> allStudents = new ArrayList<>(); // [id, year, program, lastName]
 
 
-    public GradeManagementPanel(String profId, String fullName) {
-        this.profId = profId;
-        this.fullName = fullName;
-        
+    public GradeManagementPanel() {
         setLayout(new BorderLayout());
         setBackground(Color.WHITE);
         setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
-        
-        initTopFilters();     
-        initListPanel();     
-        initBottomPanel();   
+        initTopFilters();
+        initListPanel();
+        initBottomPanel();
 
-        loadFacultySchedule();     
-        loadStudentsFromSchedule();
-        filterAndUpdateList();
+        loadAllStudents();
+        filterAndUpdateList(); // initial table load
     }
 
-    // ============ TOP FILTERS ============
     private void initTopFilters() {
         JPanel topFilters = new JPanel(new GridBagLayout());
         topFilters.setBackground(new Color(247, 240, 230));
@@ -747,95 +734,75 @@ public class FacultyDashboardUI extends JFrame {
         c.insets = new Insets(15, 25, 15, 25);
         c.anchor = GridBagConstraints.WEST;
 
-        JLabel lblYear = label("Year Level:");
-        JLabel lblProg = label("Program:");
-        JLabel lblSec = label("Section:");
-        JLabel lblSubj = label("Subject:");
+        JLabel lblYear = label("Year Level :");
+        JLabel lblProg = label("Program :");
+        JLabel lblSec = label("Section :");
 
-        yearCombo = dropdown(new String[]{"All", "1stYear", "2ndYear", "3rdYear", "4thYear"});
-        programCombo = dropdown(new String[]{"All", "BSCE", "BSEE", "BSME", "BSIE", "BTVTE", "BSBM", "BSE", "BSHM", "BSIT", "BSCS", "BSIS", "BSES", "BASLT", "BSA", "BFA", "BGT"});
-        sectionCombo = dropdown(new String[]{"All", "A", "B", "C", "D"});
-        subjectCombo = dropdown(new String[]{"All"});
+        yearCombo = dropdown(new String[]{"1st Year", "2nd Year", "3rd Year", "4th Year"});
+        programCombo = dropdown(new String[]{"BSCE", "BSEE", "BSME", "BSIE", "BTVTE", "BSBM", "BSE", "BSHM", "BSIT", "BSCS", "BSIS", "BSES", "BASLT", "BSA", "BFA", "BGT"});
+        sectionCombo = dropdown(new String[]{"A", "B", "C", "D"});
 
         c.gridx = 0; c.gridy = 0; topFilters.add(lblYear, c);
         c.gridx = 1; topFilters.add(yearCombo, c);
         c.gridx = 2; topFilters.add(lblProg, c);
         c.gridx = 3; topFilters.add(programCombo, c);
-        c.gridx = 0; c.gridy = 1; topFilters.add(lblSec, c);
-        c.gridx = 1; topFilters.add(sectionCombo, c);
-        c.gridx = 2; topFilters.add(lblSubj, c);
-        c.gridx = 3; topFilters.add(subjectCombo, c);
+        c.gridx = 4; topFilters.add(lblSec, c);
+        c.gridx = 5; topFilters.add(sectionCombo, c);
 
         yearCombo.addActionListener(e -> filterAndUpdateList());
         programCombo.addActionListener(e -> filterAndUpdateList());
         sectionCombo.addActionListener(e -> filterAndUpdateList());
-        subjectCombo.addActionListener(e -> filterAndUpdateList());
 
         add(topFilters, BorderLayout.NORTH);
     }
 
-    // ============ TABLE PANEL ============
     private void initListPanel() {
-        JPanel listPanel = new JPanel(new BorderLayout());
-        listPanel.setBackground(new Color(247, 240, 230));
-        listPanel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
+         JPanel listPanel = new JPanel(new BorderLayout());
+            listPanel.setBackground(new Color(247, 240, 230));
+            listPanel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
-        String[] columns = {"Student ID", "Year Level", "Program", "Section", "Last Name", "Subject", "Grade"};
+            String[] columns = {"Student ID", "Year Level", "Program", "Last Name"};
+            
+            tableModel = new DefaultTableModel(columns, 0);  // assign here
         
-        tableModel = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-    
-        table = new JTable(tableModel);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-        table.setForeground(new Color(10, 20, 70));
-        table.setRowHeight(30);
-        table.setFillsViewportHeight(true);
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 16));
-        table.getTableHeader().setBackground(new Color(225, 210, 160));
-        
+            table = new JTable(tableModel);  // use the class-level tableModel
+            table.setFont(new Font("Segoe UI", Font.BOLD, 17));
+            table.setForeground(new Color(225, 210, 160));
+            table.setRowHeight(25);
+            table.setFillsViewportHeight(true);
+            table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 18));
+        // Add mouse listener here:
         table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 int row = table.getSelectedRow();
                 if (row >= 0) {
                     String studentId = (String) table.getValueAt(row, 0);
-                    String subject = (String) table.getValueAt(row, 5);
-                    studentIdField.setText(studentId);
-                    
-                    for (int i = 0; i < subjectCombo.getItemCount(); i++) {
-                        if (subjectCombo.getItemAt(i).equals(subject)) {
-                            subjectCombo.setSelectedIndex(i);
-                            break;
-                        }
-                    }
+                    studentIdField.setText(studentId);  // fill studentIdField
                 }
             }
         });
 
         JScrollPane scroll = new JScrollPane(table);
         scroll.setBorder(null);
-        scroll.getViewport().setBackground(Color.WHITE);
+        scroll.getViewport().setBackground(new Color(225, 210, 160));
         listPanel.add(scroll, BorderLayout.CENTER);
 
         add(listPanel, BorderLayout.CENTER);
-    }
+}
 
-    // ============ BOTTOM PANEL (INPUT FIELDS) ============
+
     private void initBottomPanel() {
-        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 20));
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 25, 20));
         bottom.setBackground(Color.WHITE);
 
-        JLabel lblId = label("Student ID:");
+        JLabel lblId = label("Enter Student ID :");
         studentIdField = roundedInputField();
-        studentIdField.addActionListener(e -> filterAndUpdateList());
+        studentIdField.addActionListener(e -> filterAndUpdateList()); // update table on typing Enter
 
-        JLabel lblGrade = label("Grade:");
+        JLabel lblGrade = label("Enter Grade :");
         gradeField = roundedInputField();
 
-        JButton submitBtn = new JButton("Submit Grade");
+        JButton submitBtn = new JButton("Submit");
         submitBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
         submitBtn.setBackground(new Color(225, 210, 160));
         submitBtn.setForeground(new Color(10, 20, 70));
@@ -851,17 +818,17 @@ public class FacultyDashboardUI extends JFrame {
         add(bottom, BorderLayout.SOUTH);
     }
 
-    // ============ STYLED COMPONENTS ============
+    // ----------------- STYLED COMPONENT HELPERS -----------------
     private JLabel label(String text) {
         JLabel lbl = new JLabel(text);
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 18));
         lbl.setForeground(new Color(10, 20, 70));
         return lbl;
     }
 
     private JTextField roundedInputField() {
         JTextField tf = new JTextField(12);
-        tf.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        tf.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         tf.setBackground(new Color(245, 235, 220));
         tf.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
         return tf;
@@ -869,644 +836,522 @@ public class FacultyDashboardUI extends JFrame {
 
     private JComboBox<String> dropdown(String[] items) {
         JComboBox<String> cb = new JComboBox<>(items);
-        cb.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        cb.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         cb.setBackground(new Color(245, 235, 220));
-        cb.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        cb.setPreferredSize(new Dimension(140, 35));
+        cb.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+        cb.setPreferredSize(new Dimension(160, 40));
         return cb;
     }
 
-    // ============ DATA LOADING ============
-    private void loadFacultySchedule() {
-        File schedFile = new File("data/FACULTY/FACULTY_MEMBERS/" + profId + "/" + profId + "_Schedule.txt");
-        if (!schedFile.exists()) {
-            System.out.println("No schedule file found for professor: " + profId);
-            return;
-        }
-
-        List<String> lines = Utils.readFile(schedFile.getPath());
-        Set<String> subjects = new HashSet<>();
-        
-        for (String line : lines) {
-            String[] parts = line.split("\\|");
-            if (parts.length < 8)continue;
-            
-            String year = parts[0];
-            String program = parts[1];
-            String section = parts[2];
-            String subject = parts[3];
-            
-            String key = year + "|" + program + "|" + section;
-            scheduleSubjects.put(key, subject);
-            subjects.add(subject);
-        }
-        
-        subjectCombo.removeAllItems();
-        subjectCombo.addItem("All");
-        for (String subj : subjects) {
-            subjectCombo.addItem(subj);
-        }
-    }
-
-    private void loadStudentsFromSchedule() {
+    // ----------------- DATA HANDLING -----------------
+    private void loadAllStudents() {
         allStudents.clear();
-        
-        File schedFile = new File("data/FACULTY/FACULTY_MEMBERS/" + profId + "/" + profId + "_Schedule.txt");
-        if (!schedFile.exists()) return;
+        File root = new File("data/STUDENTS");
 
-        List<String> schedLines = Utils.readFile(schedFile.getPath());
-        File studentsRoot = new File("data/STUDENTS");
+        System.out.println("Root path: " + root.getAbsolutePath());
+        System.out.println("Root exists: " + root.exists());
+        System.out.println("Root is directory: " + root.isDirectory());
 
-        for (String line : schedLines) {
-            String[] p = line.split("\\|");
-            if (p.length < 8) continue;
+        List<File> files = getAllStudentFiles(root);
+        System.out.println("Files found: " + files.size());
 
-            String year = p[0];
-            String program = p[1];
-            String section = p[2];
-            String subject = p[3];
-            String schoolYear = p[6];
-            String college = p[7];
-
-            File sectionDir = new File(studentsRoot,
-                    schoolYear + "/" + year + "/" + college + "/" + program + "/" + section);
-            
-            if (!sectionDir.exists()) continue;
-
-            File[] studentDirs = sectionDir.listFiles(f -> f.isDirectory());
-            if (studentDirs == null) continue;
-
-            for (File studentDir : studentDirs) {
-                File infoFile = new File(studentDir, studentDir.getName() + "_info.txt");
-                File gradesFile = new File(studentDir, studentDir.getName() + "_grades.txt");
-                
-                if (!infoFile.exists()) continue;
-
-                List<String> infoLines = Utils.readFile(infoFile.getPath());
-                if (infoLines.isEmpty()) continue;
-
-                String decrypted = Utils.decryptEachField(infoLines.get(0));
-                String[] studentInfo = decrypted.split("\\|", -1);
-                
-                if (studentInfo.length < 2) continue;
-
-                String studentId = studentInfo[0];
-                String lastName = studentInfo[1];
-
-                Float grade = getProfGrade(gradesFile, subject);
-
-                allStudents.add(new StudentEntry(studentId, year, program, section, lastName, subject, gradesFile, grade));
+        for (File f : files) {
+            List<String> lines = Utils.readFile(f.getPath());
+            for (String line : lines) {
+                String[] p = line.split("\\|", -1);
+                if (p.length >= 4) {
+                    allStudents.add(p); // [id, year, program, lastName]
+                }
             }
         }
     }
 
-    private Float getProfGrade(File gradesFile, String subject) {
-    if (!gradesFile.exists()) return null;
-
-    String encProfId = Utils.encryptEachField(profId);
-    String encSubject = Utils.encryptEachField(subject);
-
-    List<String> lines = Utils.readFile(gradesFile.getPath());
-    for (String line : lines) {
-        if (line.trim().isEmpty()) continue;
-        
-        String[] parts = line.split("~", -1);  // ← Change ~ to |
-        if (parts.length < 4) continue;
-
-        if (parts[0].equals(encProfId) && parts[2].equals(encSubject)) {
-            try {
-                return Float.parseFloat(parts[3]);  // ← Grade is plain text
-            } catch (NumberFormatException e) {
-                return null;
-            }
-        }
-    }
-    return null;
-}
-
-    // ============ FILTER & UPDATE TABLE ============
     private void filterAndUpdateList() {
-         if (studentIdField == null || subjectCombo == null) {
-            return;
-        }
-
-        String yearFilter = (String) yearCombo.getSelectedItem();
-        String programFilter = (String) programCombo.getSelectedItem();
-        String sectionFilter = (String) sectionCombo.getSelectedItem();
-        String subjectFilter = (String) subjectCombo.getSelectedItem();
+        String year = (String) yearCombo.getSelectedItem();
+        String program = (String) programCombo.getSelectedItem();
+        // Assuming section filtering logic here if needed
         String searchId = studentIdField.getText().trim().toLowerCase();
 
-        List<StudentEntry> filtered = new ArrayList<>();
-        
-        for (StudentEntry s : allStudents) {
-            boolean matches = true;
-            
-            if (!yearFilter.equals("All") && !s.year.equalsIgnoreCase(yearFilter)) matches = false;
-            if (!programFilter.equals("All") && !s.program.equalsIgnoreCase(programFilter)) matches = false;
-            if (!sectionFilter.equals("All") && !s.section.equalsIgnoreCase(sectionFilter)) matches = false;
-            if (!subjectFilter.equals("All") && !s.subject.equalsIgnoreCase(subjectFilter)) matches = false;
-            if (!searchId.isEmpty() && !s.studentId.toLowerCase().contains(searchId)) matches = false;
-            
+        List<String[]> filtered = new ArrayList<>();
+        for (String[] s : allStudents) {
+            boolean matches = (year == null || s[1].equalsIgnoreCase(year))
+                    && (program == null || s[2].equalsIgnoreCase(program))
+                    && (searchId.isEmpty() || s[0].toLowerCase().contains(searchId));
             if (matches) filtered.add(s);
         }
 
+        // Clear current rows
         tableModel.setRowCount(0);
 
-        for (StudentEntry s : filtered) {
-            String gradeDisplay = s.grade == null ? "" : String.format("%.2f", s.grade);
-            tableModel.addRow(new Object[]{
-                s.studentId, 
-                s.year, 
-                s.program, 
-                s.section, 
-                s.lastName,
-                s.subject,
-                gradeDisplay
-            });
+        // Add filtered rows
+        for (String[] s : filtered) {
+            tableModel.addRow(s);
         }
     }
 
-    // ============ SUBMIT GRADE ============
+
     private void submitGrade() {
+        
         String studentId = studentIdField.getText().trim();
-        String gradeText = gradeField.getText().trim();
+        if (studentId.isEmpty()) return;
 
-        if (studentId.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter Student ID.", "Input Error", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        if (gradeText.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter Grade.", "Input Error", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        float grade;
+        double grade;
         try {
-            grade = Float.parseFloat(gradeText);
-            if (grade < 0 || grade > 100) {
-                JOptionPane.showMessageDialog(this, "Grade must be between 0 and 100.", "Invalid Grade", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Invalid grade format.", "Input Error", JOptionPane.ERROR_MESSAGE);
+            grade = Double.parseDouble(gradeField.getText().trim());
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Invalid grade.");
             return;
         }
 
-        StudentEntry target = null;
-        String selectedSubject = (String) subjectCombo.getSelectedItem();
-        
-        for (StudentEntry s : allStudents) {
-            if (s.studentId.equalsIgnoreCase(studentId)) {
-                if (selectedSubject.equals("All") || s.subject.equals(selectedSubject)) {
-                    target = s;
-                    break;
-                }
-            }
-        }
-
-        if (target == null) {
-            JOptionPane.showMessageDialog(this, 
-                "Student not found in your handled classes.", 
-                "Student Not Found", 
-                JOptionPane.ERROR_MESSAGE);
+        File studentFile = findStudentFile(studentId);
+        if (studentFile == null) {
+            JOptionPane.showMessageDialog(this, "Student not found.");
             return;
         }
 
-        if (target.grade != null) {
-            int choice = JOptionPane.showConfirmDialog(this,
-                "This student is already graded with " + target.grade + ".\nDo you want to update the grade?",
-                "Already Graded",
-                JOptionPane.YES_NO_OPTION);
-            
-            if (choice != JOptionPane.YES_OPTION) return;
+        List<String> lines = Utils.readFile(studentFile.getPath());
+        List<String> updated = new ArrayList<>();
+
+        for (String line : lines) {
+            String[] p = line.split("\\|", -1);
+            if (p.length > 0 && p[0].equalsIgnoreCase(studentId)) {
+                updated.add(line + "|" + profId + ":" + grade);
+            } else {
+                updated.add(line);
+            }
         }
 
-        saveGrade(target, grade);
-        
-        JOptionPane.showMessageDialog(this, 
-            "Grade successfully recorded for " + studentId + " in " + target.subject, 
-            "Success", 
-            JOptionPane.INFORMATION_MESSAGE);
+        Utils.writeFile(studentFile.getPath(), updated);
+        JOptionPane.showMessageDialog(this, "Grade recorded for " + studentId);
 
-        gradeField.setText("");
-        
-        loadStudentsFromSchedule();
+        // Reload students and refresh table
+        loadAllStudents();
         filterAndUpdateList();
     }
 
-    private void saveGrade(StudentEntry s, float grade) {
-        try {
-            List<String> lines = new ArrayList<>();
-            boolean found = false;
+    private File findStudentFile(String studentId) {
+        File root = new File("data/STUDENTS");
+        List<File> allFiles = getAllStudentFiles(root);
 
-            if (s.gradesFile.exists()) {
-                lines = Utils.readFile(s.gradesFile.getPath());
+        for (File f : allFiles) {
+            List<String> lines = Utils.readFile(f.getPath());
+            for (String line : lines) {
+                String[] p = line.split("\\|");
+                if (p.length > 0 && p[0].equalsIgnoreCase(studentId))
+                    return f;
             }
-
-            String encProfId = Utils.encryptEachField(profId);
-            String encFullName = Utils.encryptEachField(fullName);
-            String encSubject = Utils.encryptEachField(s.subject);
-            String newLine = encProfId + "~" + encFullName + "~" + encSubject + "~" + grade;
-        
-            for (int i = 0; i < lines.size(); i++) {
-                String line = lines.get(i);
-                if (line.trim().isEmpty()) continue;
-                
-                String[] parts = line.split("~", -1);
-                if (parts.length < 4) continue;
-
-                if (parts[0].equals(encProfId) && parts[2].equals(encSubject)) {
-                    lines.set(i, newLine);
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found) {
-                lines.add(newLine);
-            }
-
-            try (PrintWriter pw = new PrintWriter(new FileWriter(s.gradesFile))) {
-                for (String line : lines) {
-                    pw.println(line);
-                }
-            }
-
-            s.grade = grade;
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, 
-                "Error saving grade: " + e.getMessage(), 
-                "Error", 
-                JOptionPane.ERROR_MESSAGE);
         }
+        return null;
     }
 
-    // ============ STUDENT ENTRY CLASS ============
-    class StudentEntry {
-        String studentId;
-        String year;
-        String program;
-        String section;
-        String lastName;
-        String subject;
-        File gradesFile;
-        Float grade;
+    private List<File> getAllStudentFiles(File dir) {
+        List<File> result = new ArrayList<>();
+        File[] files = dir.listFiles();
+        if (files == null) return result;
 
-        StudentEntry(String id, String yr, String prog, String sec, String ln, String subj, File gf, Float gr) {
-            studentId = id;
-            year = yr;
-            program = prog;
-            section = sec;
-            lastName = ln;
-            subject = subj;
-            gradesFile = gf;
-            grade = gr;
+        for (File f : files) {
+            if (f.isDirectory())
+                result.addAll(getAllStudentFiles(f));
+            else if (f.getName().endsWith("_grades.txt"))
+                result.add(f);
         }
+        return result;
     }
 }
 
 
     public class AssignmentsPanel extends JPanel {
-    
-        private JComboBox<String> yearCombo, programCombo, sectionCombo, subjectCombo;
-        private JTextField titleField, deadlineField;
+
+        private JTextField yearLevelField, programField, sectionField, titleField, deadlineField;
         private JTextArea descArea;
-        private JButton postBtn;
-        
+        private JComboBox<String> courseBox;
+
+        private RoundedPanel box;
+
+        private JButton loadBtn, postBtn;
+
         private String fullName;
         private List<String> subjects;
-        private String profId;
 
-        public AssignmentsPanel(String fullName, List<String> subjects, String profId) {
-            this.fullName = fullName;
-            this.subjects = subjects;
-            this.profId = profId;
-            
-            setLayout(new BorderLayout());
-            setBackground(Color.WHITE);
-            setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        public AssignmentsPanel(String fullName, List<String> subjects) {
+        this.fullName = fullName;
+        this.subjects = subjects;
 
-            initTopSection();
-            initFormSection();
-        }
+        setLayout(null);
+        setBackground(Color.WHITE);
 
-        private void initTopSection() {
-            JPanel topPanel = new JPanel(new GridBagLayout());
-            topPanel.setBackground(new Color(247, 240, 230));
-            topPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
+        // Beige rounded panel
+        box = new RoundedPanel(25);
+        box.setBackground(new Color(248, 239, 224));
+        box.setLayout(null);
+        add(box);
 
-            GridBagConstraints c = new GridBagConstraints();
-            c.insets = new Insets(10, 15, 10, 15);
-            c.anchor = GridBagConstraints.WEST;
+        Font labelFont = new Font("Segoe UI", Font.BOLD, 24);
 
-            JLabel lblYear = label("Year Level:");
-            JLabel lblProg = label("Program:");
-            JLabel lblSec = label("Section:");
-            JLabel lblSubj = label("Subject:");
+        // ======= DROPDOWNS =======
+        JLabel lblYear = new JLabel("Year Level :");
+        lblYear.setFont(labelFont);
+        box.add(lblYear);
 
-            yearCombo = dropdown(new String[]{"1stYear", "2ndYear", "3rdYear", "4thYear"});
-            programCombo = dropdown(new String[]{"BSCE", "BSEE", "BSME", "BSIE", "BTVTE", "BSBM", "BSE", "BSHM", "BSIT", "BSCS", "BSIS", "BSES", "BASLT", "BSA", "BFA", "BGT"});
-            sectionCombo = dropdown(new String[]{"A", "B", "C", "D"});
-            
-            // Populate subjects from professor's subjects
-            String[] subjectArray = subjects.toArray(new String[0]);
-            subjectCombo = dropdown(subjectArray);
+        JComboBox<String> yearBox = new JComboBox<>(new String[]{
+                "1st Year", "2nd Year", "3rd Year", "4th Year"
+        });
+        styleCombo(yearBox);
+        box.add(yearBox);
+         yearBox.setFont(new Font("Segoe UI", Font.PLAIN, 24));
 
-            c.gridx = 0; c.gridy = 0; topPanel.add(lblYear, c);
-            c.gridx = 1; topPanel.add(yearCombo, c);
-            c.gridx = 2; topPanel.add(lblProg, c);
-            c.gridx = 3; topPanel.add(programCombo, c);
-            
-            c.gridx = 0; c.gridy = 1; topPanel.add(lblSec, c);
-            c.gridx = 1; topPanel.add(sectionCombo, c);
-            c.gridx = 2; topPanel.add(lblSubj, c);
-            c.gridx = 3; topPanel.add(subjectCombo, c);
+        JLabel lblProgram = new JLabel("Program :");
+        lblProgram.setFont(labelFont);
+        box.add(lblProgram);
 
-            add(topPanel, BorderLayout.NORTH);
-        }
+        JComboBox<String> programBox = new JComboBox<>(new String[]{
+                "BSCE", "BSEE", "BSME", "BSIE", "BTVTE", "BSBM", "BSE", "BSHM", "BSIT", "BSCS", "BSIS", "BSES", "BASLT", "BSA", "BFA", "BGT"
+        });
+        styleCombo(programBox);
+        box.add(programBox);
+         programBox.setFont(new Font("Segoe UI", Font.PLAIN, 24));
 
-        private void initFormSection() {
-            JPanel formPanel = new JPanel();
-            formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
-            formPanel.setBackground(new Color(247, 240, 230));
-            formPanel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
+        JLabel lblSection = new JLabel("Section :");
+        lblSection.setFont(labelFont);
+        box.add(lblSection);
 
-            // Title
-            JLabel lblTitle = label("Assignment Title:");
-            lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
-            formPanel.add(lblTitle);
-            formPanel.add(Box.createVerticalStrut(10));
+        JComboBox<String> sectionBox = new JComboBox<>(new String[]{
+                "A", "B", "C", "D"
+        });
+        styleCombo(sectionBox);
+        box.add(sectionBox);
+         sectionBox.setFont(new Font("Segoe UI", Font.PLAIN, 24));
 
-            titleField = roundedInputField();
-            titleField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
-            titleField.setAlignmentX(Component.LEFT_ALIGNMENT);
-            formPanel.add(titleField);
-            formPanel.add(Box.createVerticalStrut(20));
+        // ===== TITLE =====
+        JLabel lblTitle = new JLabel("Assignment Title");
+        lblTitle.setFont(labelFont);
+        box.add(lblTitle);
 
-            // Description
-            JLabel lblDesc = label("Description:");
-            lblDesc.setAlignmentX(Component.LEFT_ALIGNMENT);
-            formPanel.add(lblDesc);
-            formPanel.add(Box.createVerticalStrut(10));
+        titleField = createField();
+        box.add(titleField);
 
-            descArea = new JTextArea(6, 40);
-            descArea.setLineWrap(true);
-            descArea.setWrapStyleWord(true);
-            descArea.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-            descArea.setBackground(Color.WHITE);
-            descArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        // ===== DESCRIPTION =====
+        JLabel lblDesc = new JLabel("Description");
+        lblDesc.setFont(labelFont);
+        box.add(lblDesc);
 
-            JScrollPane descScroll = new JScrollPane(descArea);
-            descScroll.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
-            descScroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
-            descScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
-            formPanel.add(descScroll);
-            formPanel.add(Box.createVerticalStrut(20));
+        descArea = new JTextArea();
+        descArea.setLineWrap(true);
+        descArea.setWrapStyleWord(true);
+        descArea.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        descArea.setBackground(new Color(242, 234, 218));
+        descArea.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-            // Deadline
-            JLabel lblDeadline = label("Deadline (YYYY-MM-DD):");
-            lblDeadline.setAlignmentX(Component.LEFT_ALIGNMENT);
-            formPanel.add(lblDeadline);
-            formPanel.add(Box.createVerticalStrut(10));
+        JScrollPane descScroll = new JScrollPane(descArea);
+        descScroll.setBorder(BorderFactory.createEmptyBorder());
+        box.add(descScroll);
 
-            deadlineField = roundedInputField();
-            deadlineField.setMaximumSize(new Dimension(300, 35));
-            deadlineField.setAlignmentX(Component.LEFT_ALIGNMENT);
-            formPanel.add(deadlineField);
-            formPanel.add(Box.createVerticalStrut(30));
+        // ===== DEADLINE =====
+        JLabel lblDeadline = new JLabel("Deadline");
+        lblDeadline.setFont(labelFont);
+        box.add(lblDeadline);
 
-            // Post Button
-            JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-            btnPanel.setOpaque(false);
-            btnPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        deadlineField = createField();
+        box.add(deadlineField);
 
-            postBtn = new JButton("POST ASSIGNMENT");
-            postBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
-            postBtn.setBackground(new Color(225, 210, 160));
-            postBtn.setForeground(new Color(10, 20, 70));
-            postBtn.setFocusPainted(false);
-            postBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            postBtn.addActionListener(e -> postAssignment());
+        // ===== POST BUTTON =====
+        postBtn = new JButton("POST");
+        postBtn.setBackground(new Color(210, 190, 150));
+        postBtn.setFont(new Font("SansSerif", Font.BOLD, 15));
+        box.add(postBtn);
+        box.setComponentZOrder(postBtn, 0);
+        box.repaint();
 
-            btnPanel.add(postBtn);
-            formPanel.add(btnPanel);
-            formPanel.add(Box.createVerticalGlue());
 
-            JScrollPane mainScroll = new JScrollPane(formPanel);
-            mainScroll.setBorder(null);
-            mainScroll.getVerticalScrollBar().setUnitIncrement(16);
-            add(mainScroll, BorderLayout.CENTER);
-        }
+        // ===== RESPONSIVE (auto-center + auto-resize) =====
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
 
-     private void postAssignment() {
-    String year = (String) yearCombo.getSelectedItem();
-    String program = (String) programCombo.getSelectedItem();
-    String section = (String) sectionCombo.getSelectedItem();
-    String subject = (String) subjectCombo.getSelectedItem();
-    String title = titleField.getText().trim();
-    String desc = descArea.getText().trim();
-    String deadline = deadlineField.getText().trim();
+                int width = getWidth() - 80;   // form box left-right padding
+                int height = getHeight() - 180;
 
-    if (title.isEmpty() || desc.isEmpty() || deadline.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "All fields are required.", "Input Error", JOptionPane.WARNING_MESSAGE);
-        return;
+                // Form box stretch LEFT → RIGHT q
+                box.setBounds(40, 40, width, height + 300);
+
+                int insideW = width - 80; // inner padding
+                int columnW = insideW / 3; // 3 columns for dropdowns
+
+                // Row 1
+                lblYear.setBounds(40, 25, 150, 30);
+                yearBox.setBounds(40, 55, columnW - 40, 30);
+
+                lblProgram.setBounds(60 + columnW, 25, 150, 30);
+                programBox.setBounds(60 + columnW, 55, columnW - 40, 30);
+
+                lblSection.setBounds(80 + (columnW * 2), 25, 150, 30);
+                sectionBox.setBounds(80 + (columnW * 2), 55, columnW - 20, 30);
+
+                // TITLE
+                lblTitle.setBounds(40, 110, 200, 30);
+                titleField.setBounds(40, 145, insideW, 30);
+
+                // DESCRIPTION
+                lblDesc.setBounds(40, 195, 200, 30);
+                descScroll.setBounds(40, 230, insideW, 140);
+
+                // DEADLINE & POST button
+                lblDeadline.setBounds(40, 390, 200, 30);
+                deadlineField.setBounds(40, 425, insideW / 3, 30);
+
+                postBtn.setBounds(width - 200, 455, 150, 40);
+            }
+        });
     }
 
-    // Find school year and college from professor's schedule
-    String profSchedulePath = "data/FACULTY/FACULTY_MEMBERS/" + profId + "/" + profId + "_Schedule.txt";
-    List<String> schedLines = Utils.readFile(profSchedulePath);
-    
-    String schoolYear = "";
-    String college = "";
-    boolean found = false;
+    private void styleCombo(JComboBox<String> box) {
+        box.setBackground(new Color(242, 234, 218));
+        box.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    }
 
-    // Normalize inputs
-    String targetYear = year.replace(" ", "").trim();
-    String targetProg = program.trim();
-    String targetSec = section.trim();
 
-    for (String line : schedLines) {
-        if(line.trim().isEmpty()) continue;
-        
-        String[] parts = line.split("\\|");
-        
-        if (parts.length >= 8) {
-            String fileYear = parts[0].replace(" ", "").trim();
-            String fileProg = parts[1].trim();
-            String fileSec  = parts[2].trim();
-            // Note: parts[3] is Subject, but we ignore it for directory lookup
-            
-            // CHECK ONLY: Year, Program, and Section
-            if (fileYear.equalsIgnoreCase(targetYear) && 
-                fileProg.equalsIgnoreCase(targetProg) && 
-                fileSec.equalsIgnoreCase(targetSec)) {
-                
-                schoolYear = parts[6].trim(); 
-                college = parts[7].trim();    
-                found = true;
-                break; // Found the section details, stop searching
+        // ==========================================================
+        // RESPONSIVE LAYOUT ENGINE
+        // ====================================================s======
+        private void resizeComponents(JScrollPane descScroll) {
+            int margin = 40;
+
+            // Resize beige box based on panel size
+            box.setBounds(
+                    20, // left margin
+                    40, // top margin
+                    getWidth() - 40, // full width minus margin
+                    getHeight() - 80 // full height minus margin
+            );
+
+            int boxWidth = box.getWidth();
+
+            // Course row
+            courseBox.setBounds(40, 100, boxWidth - 240, 28);
+            loadBtn.setBounds(boxWidth - 180, 90, 140, 28);
+
+            // Title
+            titleField.setBounds(40, 165, boxWidth - 80, 30);
+
+            // Description grows
+            descScroll.setBounds(40, 230, boxWidth - 80, 160);
+
+            // Deadline stays on left
+            deadlineField.setBounds(40, 400, 250, 30);
+
+            // Post button moves right
+            postBtn.setBounds(boxWidth - 200, 400, 150, 35);
+        }
+
+        // ===========================================================
+        // LOAD COURSES (SAME AS YOUR CODE)
+        // ===========================================================
+        private void loadCourses() {
+            courseBox.removeAllItems();
+
+            String path = "data/STUDENTS/" +
+                    yearLevelField.getText().trim() + "/" +
+                    yearLevelField.getText().trim() + "/" +
+                    programField.getText().trim().toUpperCase() + "/" +
+                    sectionField.getText().trim();
+
+            File scheduleFile = new File(path + "/" + sectionField.getText().trim() + "_schedule.txt");
+
+            if (!scheduleFile.exists()) {
+                JOptionPane.showMessageDialog(this, "Schedule not found.");
+                return;
+            }
+
+            List<String> lines = Utils.readFile(scheduleFile.getPath());
+            for (String line : lines) {
+                String courseName = line.split(",")[0].trim();
+                if (subjects.contains(courseName)) {
+                    courseBox.addItem(courseName);
+                }
+            }
+
+            if (courseBox.getItemCount() == 0)
+                JOptionPane.showMessageDialog(this, "No courses available.");
+        }
+
+        // ===========================================================
+        // SAVE ASSIGNMENT (SAME AS YOUR CODE)
+        // ===========================================================
+        private void saveAssignment() {
+            String course = (String) courseBox.getSelectedItem();
+            String title = titleField.getText().trim();
+            String desc = descArea.getText().trim();
+            String deadline = deadlineField.getText().trim();
+
+            if (course == null || title.isEmpty() || desc.isEmpty() || deadline.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "All fields required.");
+                return;
+            }
+
+            String folder = "data/STUDENTS/" +
+                    yearLevelField.getText().trim() + "/" +
+                    yearLevelField.getText().trim() + "/" +
+                    programField.getText().trim().toUpperCase() + "/" +
+                    sectionField.getText().trim();
+
+            Utils.ensureDir(folder);
+
+            String line = fullName + "|" + course + "|" + title + "|" + desc + "|" + deadline
+                    + "|UPCOMING|PAST DUE|COMPLETED";
+
+            Utils.appendToFile(folder + "/" +
+                    sectionField.getText().trim() + "_assignments.txt",
+                    Utils.encrypt(line));
+
+            JOptionPane.showMessageDialog(this, "Assignment saved successfully.");
+        }
+
+        // ===========================================================
+        // UI HELPERS
+        // ===========================================================
+        private JTextField createField() {
+            JTextField tf = new JTextField();
+            tf.setBackground(new Color(242, 234, 218));
+            tf.setBorder(BorderFactory.createEmptyBorder(5, 8, 5, 8));
+            return tf;
+        }
+
+        class RoundedPanel extends JPanel {
+            private int radius;
+
+            public RoundedPanel(int radius) {
+                this.radius = radius;
+                setOpaque(false);
+            }
+
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), radius, radius);
+                g2.dispose();
+            }
+        }
+
+        class RoundedButton extends JButton {
+            public RoundedButton(String text) {
+                super(text);
+                setContentAreaFilled(false);
+                setBorderPainted(false);
+                setFocusPainted(false);
+            }
+
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+                super.paintComponent(g);
+                g2.dispose();
             }
         }
     }
 
-    if (!found || schoolYear.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Could not find matching section in schedule.\nPlease check if Year, Program, and Section are correct.", "Error", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
-
-    // Construct path
-    String yearDir = year.replace(" ", ""); 
-    String syDir = schoolYear.replace(" ", "");
-
-    String assignmentPath = "data/STUDENTS/" + syDir + "/" + yearDir + "/" + 
-                        college.toUpperCase() + "/" + program.toUpperCase() + "/" + section + "/" + 
-                        program.toUpperCase() + section + "_assignments.txt";
-
-    Utils.ensureDir(new File(assignmentPath).getParent());
-
-    // Write the assignment with the Subject name selected in the dropdown (e.g., "MAJOR")
-    String line = fullName + "|" + subject + "|" + title + "|" + desc + "|" + deadline;
-    Utils.appendToFile(assignmentPath, line);
-
-    JOptionPane.showMessageDialog(this, "Assignment posted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-    
-    // Clear fields
-    titleField.setText("");
-    descArea.setText("");
-    deadlineField.setText("");
-}
-        private JLabel label(String text) {
-            JLabel lbl = new JLabel(text);
-            lbl.setFont(new Font("Segoe UI", Font.BOLD, 16));
-            lbl.setForeground(new Color(10, 20, 70));
-            return lbl;
-        }
-
-        private JTextField roundedInputField() {
-            JTextField tf = new JTextField();
-            tf.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-            tf.setBackground(Color.WHITE);
-            tf.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200)),
-                BorderFactory.createEmptyBorder(8, 12, 8, 12)
-            ));
-            return tf;
-        }
-
-        private JComboBox<String> dropdown(String[] items) {
-            JComboBox<String> cb = new JComboBox<>(items);
-            cb.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-            cb.setBackground(new Color(245, 235, 220));
-            cb.setPreferredSize(new Dimension(140, 35));
-            return cb;
-        }
-    }
-
-
     private class ResignationPanel extends JPanel {
     
+        private JTextArea infoArea;
+        private JTextField reasonField;
         private JTextArea reasonArea;
         private JButton submitBtn;
+        private RoundedPanel mainBox;  
 
         public ResignationPanel() {
-            setLayout(new BorderLayout());
-            setBackground(Color.WHITE);
-            setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
-            initContent();
-        }
+        setLayout(null);
+        setBackground(Color.WHITE);
 
-        private void initContent() {
-            JPanel contentPanel = new JPanel();
-            contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-            contentPanel.setBackground(new Color(247, 240, 230));
-            contentPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
+        // === OUTER BEIGE PANEL 
+        mainBox = new RoundedPanel(30);
+        mainBox.setBackground(new Color(248, 239, 224));  
+        mainBox.setLayout(null);
+        add(mainBox);
 
-            // Title
-            JLabel titleLabel = new JLabel("Reason for Resignation");
-            titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-            titleLabel.setForeground(new Color(10, 20, 70));
-            titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            contentPanel.add(titleLabel);
-            contentPanel.add(Box.createVerticalStrut(20));
+        Font titleFont = new Font("Segoe UI", Font.BOLD, 25);
 
-            // Text area
-            reasonArea = new JTextArea(10, 50);
-            reasonArea.setLineWrap(true);
-            reasonArea.setWrapStyleWord(true);
-            reasonArea.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-            reasonArea.setBackground(Color.WHITE);
-            reasonArea.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        // ===== TITLE =====
+        JLabel lblTitle = new JLabel("Reason for Resignation");
+        lblTitle.setFont(titleFont);
+        lblTitle.setForeground(new Color(10, 20, 60));
+        mainBox.add(lblTitle);
 
-            JScrollPane scrollPane = new JScrollPane(reasonArea);
-            scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200)));
-            scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
-            scrollPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 250));
-            contentPanel.add(scrollPane);
-            contentPanel.add(Box.createVerticalStrut(30));
+        // ===== INNER LIGHT BEIGE TEXTAREA PANEL =====
+        RoundedPanel textBox = new RoundedPanel(20);
+        textBox.setLayout(null);
+        textBox.setBackground(new Color(242, 234, 218)); 
+        mainBox.add(textBox);
 
-            // Submit button
-            JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-            btnPanel.setOpaque(false);
-            btnPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        // TEXTAREA
+        reasonArea = new JTextArea();
+        reasonArea.setLineWrap(true);
+        reasonArea.setWrapStyleWord(true);
+        reasonArea.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        reasonArea.setBackground(new Color(242, 234, 218));
+        reasonArea.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-            submitBtn = new JButton("SUBMIT RESIGNATION");
-            submitBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
-            submitBtn.setBackground(new Color(225, 210, 160));
-            submitBtn.setForeground(new Color(10, 20, 70));
-            submitBtn.setFocusPainted(false);
-            submitBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            submitBtn.addActionListener(e -> submitResignation());
+        JScrollPane sp = new JScrollPane(reasonArea);
+        sp.setBorder(null);
+        textBox.add(sp);
 
-            btnPanel.add(submitBtn);
-            contentPanel.add(btnPanel);
-            contentPanel.add(Box.createVerticalGlue());
+        // ===== SUBMIT BUTTON =====
+        submitBtn = new JButton("Submit");
+        submitBtn.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        submitBtn.setForeground(new Color(10, 20, 60));
+        submitBtn.setBackground(new Color(210, 190, 150)); 
+        submitBtn.setBorder(BorderFactory.createEmptyBorder());
+        submitBtn.setFocusPainted(false);
+        submitBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        mainBox.add(submitBtn);
 
-            JScrollPane mainScroll = new JScrollPane(contentPanel);
-            mainScroll.setBorder(null);
-            mainScroll.getVerticalScrollBar().setUnitIncrement(16);
-            add(mainScroll, BorderLayout.CENTER);
+        submitBtn.addActionListener(e -> submitResignation());
 
-            loadExisting();
-        }
+        // ===== RESPONSIVE AUTO-RESIZE =====
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+
+                int width = getWidth() - 80;
+
+                mainBox.setBounds(40, 40, width, getHeight() - 100);
+
+                int insideW = width - 80;
+
+                lblTitle.setBounds(40, 25, 600, 30);
+
+                textBox.setBounds(40, 70, insideW, 250);
+                sp.setBounds(10, 10, insideW - 20, 220);
+
+                submitBtn.setBounds(insideW - 200, 400, 150, 35);
+            }
+        });
+    }
 
         private void loadExisting() {
             String filePath = "data/FACULTY/RESIGNATIONS/" + profId + "_resignation.txt";
             File f = new File(filePath);
-            if (!f.exists()) return;
-            
-            List<String> lines = Utils.readFile(filePath);
-            if (lines.isEmpty()) return;
-            
-            String[] parts = lines.get(0).split("\\|");
-            if (parts.length >= 3) {
-                reasonArea.setText(parts[2]);
-                submitBtn.setEnabled(false);
-                submitBtn.setText("ALREADY SUBMITTED");
-            }
+            if (!f.exists())
+                return;
+            List<String> info = Utils.readFile(filePath);
+            if (info.isEmpty())
+                return;
+            String decrypted = Utils.decryptEachField(info.get(0));
+            infoArea.setText(decrypted.replace("|", "\n"));
         }
 
         private void submitResignation() {
             String reason = reasonArea.getText().trim();
-            
-            if (reason.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please enter a reason for resignation.", "Input Error", JOptionPane.WARNING_MESSAGE);
+            if (reason.isEmpty())
                 return;
-            }
-
             Utils.ensureDir("data/FACULTY/RESIGNATIONS");
             String filePath = "data/FACULTY/RESIGNATIONS/" + profId + "_resignation.txt";
             String line = profId + "|" + fullName + "|" + reason + "|Pending";
-            
             Utils.writeFile(filePath, List.of(line));
-            
-            JOptionPane.showMessageDialog(this, "Resignation submitted successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
-            
-            submitBtn.setEnabled(false);
-            submitBtn.setText("ALREADY SUBMITTED");
+            JOptionPane.showMessageDialog(this, "Resignation submitted successfully.");
+            loadExisting();
         }
     }
 

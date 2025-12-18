@@ -722,70 +722,75 @@ private int scanStudentFolders(File dir, String prefix, int currentMax) {
         return statusPanel;
     }
 
-    private boolean saveStudentRecord(String studentID) {
+private boolean saveStudentRecord(String studentID) {
     try {
-        // Create student folder structure
+        String section = "A";
+        
         String folderPath = "data/STUDENTS/" + 
-                          schoolYear + "/" +
-                          yearLevel + "/" +
-                          college + "/" +
-                          program + "/" +
-                          "A" + "/" +  // Default section A
-                          studentID;
+                    schoolYear + "/" +
+                    yearLevel + "/" +
+                    college + "/" +
+                    program + "/" +
+                    section + "/" +
+                    studentID;
         
         File studentFolder = new File(folderPath);
         studentFolder.mkdirs();
-
         
+        // Parse name - pero hindi na natin gagamitin yung middleInitial
         String[] nameParts = fullName.trim().split("\\s+");
-        String lastName = nameParts.length > 0 ? nameParts[nameParts.length - 1] : "";
-        String firstName = nameParts.length > 1 ? nameParts[0] : "";
-        String middleInitial = nameParts.length > 2 ? nameParts[1].substring(0, 1) : "";
+        String lastName = "";
+        String firstName = "";
 
+        if (nameParts.length == 1) {
+            lastName = nameParts[0];
+        } else if (nameParts.length == 2) {
+            firstName = nameParts[0];
+            lastName = nameParts[1];
+        } else if (nameParts.length >= 3) {
+            firstName = nameParts[0];
+            lastName = nameParts[nameParts.length - 1];
+            // ❌ No need for middle initial anymore
+        }
+
+        // ✅ NEW FORMAT - 18 fields only (0-17), NO middle initial
         String studentInfo = String.join("|",
             studentID,              // 0
             lastName,               // 1
             firstName,              // 2
-            middleInitial,          // 3
-            address,                // 4
-            birthdate,              // 5
-            String.valueOf(age),    // 6
-            email,                  // 7
-            phone,                  // 8
-            fathersName,            // 9
-            mothersName,            // 10
-            school,                 // 11
-            defaultPass,            // 12 - password
-            schoolYear,             // 13
-            yearLevel,              // 14
-            college,                // 15
-            program,                // 16
-            "ENROLLED",             // 17 - status
-            "A",                    // 18 - section (default A)
-            "",                     // 19 - reserved
-            "A"                     // 20 - section again (for compatibility)
+            // ❌ REMOVED: middleInitial
+            address,                // 3 (shifted down!)
+            birthdate,              // 4
+            String.valueOf(age),    // 5
+            email,                  // 6
+            phone,                  // 7
+            fathersName,            // 8
+            mothersName,            // 9
+            school,                 // 10
+            defaultPass,            // 11
+            schoolYear,             // 12
+            yearLevel,              // 13
+            college,                // 14
+            program,                // 15
+            "ENROLLED",             // 16
+            section                 // 17
         );
 
-        // Encrypt the info
         String encrypted = Utils.encryptEachField(studentInfo);
 
-        // Save to _info.txt
         File infoFile = new File(studentFolder, studentID + "_info.txt");
         Utils.writeRawFile(infoFile.getPath(), java.util.Collections.singletonList(encrypted));
 
-        // Create empty grades file
+        // Create empty files
         File gradesFile = new File(studentFolder, studentID + "_grades.txt");
         Utils.writeRawFile(gradesFile.getPath(), new java.util.ArrayList<>());
 
-        // Create empty inbox file
         File inboxFile = new File(studentFolder, studentID + "_inbox.txt");
         Utils.writeRawFile(inboxFile.getPath(), new java.util.ArrayList<>());
 
-        // Create empty notes file
         File notesFile = new File(studentFolder, studentID + "_notes.txt");
         Utils.writeRawFile(notesFile.getPath(), new java.util.ArrayList<>());
 
-        // Create empty assignments file
         File assignmentsFile = new File(studentFolder, studentID + "_assignments.txt");
         Utils.writeRawFile(assignmentsFile.getPath(), new java.util.ArrayList<>());
 

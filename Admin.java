@@ -601,6 +601,10 @@ public class Admin {
             }
 
             File profFile = new File(FACULTY_SCHED_PROF + "/" + profID + "/" + profID + "_Schedule.txt");
+            // ✅ CREATE PARENT FOLDERS FIRST!
+            profFile.getParentFile().mkdirs();
+
+            // Then create the file
             if (!profFile.exists()) {
                 try {
                     profFile.createNewFile();

@@ -1,0 +1,30 @@
+PROF-0001|faculty123|Dr. Karen Louise O. Maniego|COS|MAJOR
+PROF-0002|faculty123|Prof. Gabriel R. Bautista|COS|MAJOR
+PROF-0003|faculty123|Dr. Shiela Marie C. Roxas|COS|MAJOR
+PROF-0004|faculty123|Dr. Faith L. Austria|COS|MAJOR
+PROF-0005|faculty123|Prof. Nilo M. Santiago|COS|MAJOR
+PROF-0006|faculty123|Engr. Ramon D. Vergara|COE|MAJOR
+PROF-0007|faculty123|Engr. Liza Mae F. Catindig|COE|MAJOR
+PROF-0008|faculty123|Engr. Julius P. Manaloto|COE|MAJOR
+PROF-0009|faculty123|Engr. Christine Joy L. Amurao|COE|MAJOR
+PROF-0010|faculty123|Engr. Patrick V. Delos Reyes|COE|MINOR
+PROF-0011|faculty123|Prof. Maricar G. Tumbaga|CIE|MAJOR
+PROF-0012|faculty123|Prof. Angelo S. Nabong|CIE|MAJOR
+PROF-0013|faculty123|Prof. Ruby Anne F. Umandap|CIE|MAJOR
+PROF-0014|faculty123|Prof. Jerico A. Bituin|CIE|MAJOR
+PROF-0015|faculty123|Prof. Danilyn P. Arcega|CIE|MINOR
+PROF-0016|faculty123|Arch. Lorena P. Mabanta|CAFA|MAJOR
+PROF-0017|faculty123|Arch. Joel R. Ramos|CAFA|MAJOR
+PROF-0018|faculty123|Prof. Nika Alyssa D. Serafica|CAFA|MAJOR
+PROF-0019|faculty123|Prof. Manuel I. Paderes|CAFA|MAJOR
+PROF-0020|faculty123|Arch. Trisha Mae C. Lontoc|CAFA|MINOR
+PROF-0021|faculty123|Prof. Ronald F. Villaverde|CIT|MAJOR
+PROF-0022|faculty123|Prof. Jenny Rose T. Abellera|CIT|MAJOR
+PROF-0023|faculty123|Prof. Kenrick M. Santos|CIT|MAJOR
+PROF-0024|faculty123|Prof. Arvin B. Doria|CIT|MAJOR
+PROF-0025|faculty123|Prof. Mary Antonette S. Garde|CIT|MINOR
+PROF-0026|faculty123|Prof. Hannah Grace B. Layug|CLA|MAJOR
+PROF-0027|faculty123|Prof. Michael John S. Fabella|CLA|MAJOR
+PROF-0028|faculty123|Dr. Rhea Camille O. De Guzman|CLA|MINOR
+PROF-0029|faculty123|Prof. Jerome P. Balagtas|CLA|MINOR
+PROF-0030|faculty123|Prof. Ana Patricia L. Yumul|CLA|MINOR
